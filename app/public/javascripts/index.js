@@ -14,25 +14,32 @@ var App = function (options){
 
 
 	var audioContext = new AudioContext();
-	console.log(audioContext);
 
 	var init = function (){
 		initBackbone();
 		initGamepads();
 	};
 
-
-
+	var getGamepadId = function (gamepad) {
+		var id = gamepad.index + '-' + gamepad.id.replace(/  +/g, ' ').replace(/\s/g, '-');
+		return id;
+	};
 
 
 	var initGamepads = function () {
 		// check if gamepads are already connected:
 		var gamepads = navigator.getGamepads();
-		console.log(gamepads.length + ' gamepads connected on startup');
+
+		// filter out gamepads that are null (can happen when gamepad was disconnected):
+		gamepads = _.filter(gamepads, function (gamepad) {
+			if(gamepad !== null) return gamepad;
+		});
+
+
+		console.log(gamepads.length + ' gamepads already connected');
+
 		for (var i = 0; i < gamepads.length; i++) {
-			if(gamepads[i]){
-				onNewGamepad(gamepads[i]);
-			}
+			onNewGamepad(gamepads[i]);
 		};
 
 		// listen for new gamepads:
@@ -49,6 +56,9 @@ var App = function (options){
 
 
 	var onNewGamepad = function (gamepad) {
+		var gamepadId = getGamepadId(gamepad);
+		console.log('> onNewGamepad:', gamepadId);
+
 		// transform buttons into collection of Buttons:
 		var buttonsCollection = new Collections.Buttons();
 		for (var i = 0; i < gamepad.buttons.length; i++) {
@@ -67,7 +77,7 @@ var App = function (options){
 
 		// build game Model:
 		var gamepadModel = new Models.Gamepad({
-			id: gamepad.id,
+			id: gamepadId,
 			mapping: gamepad.mapping,
 			connected: gamepad.connected,
 			buttons: buttonsCollection,
@@ -79,7 +89,7 @@ var App = function (options){
 
 
 		// save timestamp and start polling if not already polling:
-		timestamps[gamepad.id] = gamepad.timestamp;
+		timestamps[gamepadId] = gamepad.timestamp;
 		if(!polling) {
 			polling = true;
 			window.requestAnimationFrame(pollGamepads);
@@ -92,11 +102,13 @@ var App = function (options){
 	var pollGamepads = function () {
 		var gamepads = navigator.getGamepads();
 		for (var i = gamepads.length - 1; i >= 0; i--) {
-			if(!gamepads[i]) continue;
-			var gamepad = gamepads[i];
+			if(!gamepads[i]) continue; // gamepad could be null
 
-			if(gamepad.timestamp != timestamps[gamepad.id]) {
-				timestamps[gamepad.id] = gamepad.timestamp;
+			var gamepad = gamepads[i];
+			var gamepadId = getGamepadId(gamepad);
+
+			if(gamepad.timestamp != timestamps[gamepadId]) {
+				timestamps[gamepadId] = gamepad.timestamp;
 				onGamepadUpdate(gamepad);
 			}
 		};
@@ -107,8 +119,9 @@ var App = function (options){
 	};
 
 	var onGamepadUpdate = function (gamepad) {
+		var gamepadId = getGamepadId(gamepad);
 		// fetch Backbone gamepad model:
-		var gamepadModel = Collections.gamepads.get(gamepad.id);
+		var gamepadModel = Collections.gamepads.get(gamepadId);
 		if(!gamepadModel) return;
 
 		// update button models:
@@ -182,6 +195,13 @@ var App = function (options){
 			down: 40,
 			left: 37,
 			right: 39
+		},
+
+		isPressed: {
+			left: false,
+			right: false,
+			up: false,
+			down: false
 		},
 
 		initialize: function (options) {
@@ -338,46 +358,128 @@ var App = function (options){
 
 		axis_changed: function (axis, value) {
 			// console.log('axis changed', axis.toJSON());
+
+			var id = axis.id;
+			var value = Math.round(axis.get('value')); // sometimes it's like -0.003921568393707275, which should be 0
+
+
+			if(id == 0 && value == -1) {
+				this.isPressed.left = true;
+				this.sendNesKey(this.nesKeys.left, true);
+
+				// cancel right if that is still pressed:
+				if(this.isPressed.right) {
+					this.isPressed.right = false;
+					this.sendNesKey(this.nesKeys.right, false);
+				}
+			}
+
+			if(id == 0 && value == 1) {
+				this.isPressed.right = true;
+				this.sendNesKey(this.nesKeys.right, true);
+
+				// cancel left if that is still pressed:
+				if(this.isPressed.left) {
+					this.isPressed.left = false;
+					this.sendNesKey(this.nesKeys.left, false);
+				}
+			}
+
+			if(id == 0 && value == 0) {
+				// something is release, but we don't know what
+				if(this.isPressed.left) {
+					this.isPressed.left = false;
+					this.sendNesKey(this.nesKeys.left, false);
+				}
+
+				if(this.isPressed.right) {
+					this.isPressed.right = false;
+					this.sendNesKey(this.nesKeys.right, false);
+				}
+			}
+
+			if(id == 1 && value == -1) {
+				this.isPressed.up = true;
+				this.sendNesKey(this.nesKeys.up, true);
+
+				// cancel down if that is still pressed:
+				if(this.isPressed.down) {
+					this.isPressed.down = false;
+					this.sendNesKey(this.nesKeys.down, false);
+				}
+			}
+
+			if(id == 1 && value == 1) {
+				this.isPressed.down = true;
+				this.sendNesKey(this.nesKeys.down, true);
+
+				// cancel up if that is still pressed:
+				if(this.isPressed.up) {
+					this.isPressed.up = false;
+					this.sendNesKey(this.nesKeys.up, false);
+				}
+			}
+
+			if(id == 1 && value == 0) {
+				// something is release, but we don't know what
+				if(this.isPressed.up) {
+					this.isPressed.up = false;
+					this.sendNesKey(this.nesKeys.up, false);
+				}
+
+				if(this.isPressed.down) {
+					this.isPressed.down = false;
+					this.sendNesKey(this.nesKeys.down, false);
+				}
+			}
 		},
 
-		button_changed: function (button, value) {
-			// console.log('button changed', button.toJSON());
 
-			var neskey = null;
-			switch(button.get('id')) {
+
+
+		button_changed: function (button, value) {
+			console.log('button changed', button.toJSON());
+
+
+			var id = button.id;
+			var isPressed = button.get('pressed');
+
+			switch(id) {
 				case 14:
-				neskey = this.nesKeys.left;
+				this.sendNesKey(this.nesKeys.left, isPressed);
 				break;
 
 				case 15:
-				neskey = this.nesKeys.right;
+				this.sendNesKey(this.nesKeys.right, isPressed);
 				break;
 
 				case 12:
-				neskey = this.nesKeys.up;
+				this.sendNesKey(this.nesKeys.up, isPressed);
 				break;
 
 				case 13:
-				neskey = this.nesKeys.down;
+				this.sendNesKey(this.nesKeys.down, isPressed);
 				break;
 
 				case 8:
 				case 10:
-				neskey = this.nesKeys.select;
+				this.sendNesKey(this.nesKeys.select, isPressed);
 				break;
 
 				case 9:
 				case 11:
-				neskey = this.nesKeys.start;
+				// this.sendNesKey(this.nesKeys.start, isPressed);
+				return resetAndPlayAll();
 				break;
 
+				case 1:
 				case 2:
 				case 3:
-				neskey = this.nesKeys.B;
+				this.sendNesKey(this.nesKeys.A, isPressed);
 				break;
 
 				case 0:
-				neskey = this.nesKeys.A;
+				this.sendNesKey(this.nesKeys.B, isPressed);
 				break;
 
 				case 4:
@@ -387,21 +489,21 @@ var App = function (options){
 				return resetAndPlayAll();
 
 			}
+		},
 
+		sendNesKey: function (neskey, isPressed) {
+			// console.log(neskey, isPressed?'pressed':'released');
+			// build a key event like it came from the keyboard:
+			var keyEvent = {
+				preventDefault: function () {},
+				keyCode: neskey
+			};
 
-			if(neskey != null) {
-				// build a key event like it came from the keyboard:
-				var keyEvent = {
-					preventDefault: function () {},
-					keyCode: neskey
-				};
-
-				// send it to jsnes:
-				if(button.get('pressed')){
-					this.jsnes.keyboard.keyDown(keyEvent);
-				}else{
-					this.jsnes.keyboard.keyUp(keyEvent);
-				}
+			// send it to jsnes:
+			if(isPressed) {
+				this.jsnes.keyboard.keyDown(keyEvent);
+			}else{
+				this.jsnes.keyboard.keyUp(keyEvent);
 			}
 		},
 
