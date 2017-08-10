@@ -1,0 +1,10 @@
+{
+	"ignore": [
+		"/public/*",
+		"/views/*",
+		"./README.md"
+	],
+	"watch": [
+		"*.*"
+	]
+}

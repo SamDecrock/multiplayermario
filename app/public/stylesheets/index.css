@@ -1,0 +1,85 @@
+* {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-decoration: none;
+  font-family: 'Roboto', sans-serif;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  position: relative;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+body {
+  background-color: #fff;
+  position: relative;
+  color: #000;
+  font-size: 16px;
+}
+a {
+  text-decoration: none;
+  color: #808080;
+}
+.button,
+button {
+  border: 1px #aaa solid;
+  background: #f0f0f0;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  height: 32px;
+  min-width: 140px;
+  text-align: center;
+  display: inline-block;
+  cursor: pointer;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.button:active,
+button:active {
+  padding-left: 4px;
+}
+.button:disabled,
+button:disabled {
+  color: #b6b6b6;
+  padding-left: 0px;
+}
+a.button {
+  padding-top: 6px;
+}
+.link {
+  text-decoration: underline;
+}
+.link:hover {
+  text-decoration: none;
+}
+@media screen and (max-width: 768px) {
+  body {
+    font-size: 12px;
+  }
+}
+.content {
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  background-color: #000;
+  text-align: center;
+}
+.content h1 {
+  padding: 15px 0px;
+}
+.content .nesgame {
+  display: inline-block;
+}
+.content .nesgame .id {
+  font-size: 10px;
+}
+.content .nesgame .nescanvas {
+  width: 512px;
+  height: 480px;
+}

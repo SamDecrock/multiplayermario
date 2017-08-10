@@ -1,0 +1,41 @@
+doctype html5
+html
+	head
+		meta(name='viewport', content='initial-scale=1.0, user-scalable=no')
+		title= title
+		link(type='text/fonts', rel='stylesheet', src="/vendor/Roboto")
+
+		link(rel='stylesheet', href="/stylesheets/index.css")
+
+		script(type='text/javascript', src='/vendor/jquery-2.1.1.min.js')
+		script(type='text/javascript', src='/vendor/jquery.tmpl.min.js')
+		script(type='text/javascript', src="/vendor/underscore-min.js")
+		script(type='text/javascript', src="/vendor/backbone-min.js")
+
+		//- jsnes:
+		script(type='text/javascript', src='/vendor/jsnes/lib/dynamicaudio-min.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/nes.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/utils.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/cpu.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/keyboard.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/mappers.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/papu.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/ppu.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/rom.js')
+		script(type='text/javascript', src='/vendor/jsnes/source/ui.js')
+
+		script(type='text/javascript', src='/javascripts/index.js')
+
+
+		script#nesgame-template(type="text/x-jquery-tmpl")
+			canvas.nescanvas(width="256", height="240")
+			.id ${id}
+	body
+		.content
+			h1 Multiplayer Mario
+
+			.nogamepads
+				| No Gamepads found. Connect them and press a button (preferably the X on a Playstation controller)
+				br
+				| (And don't forget to use Google Chrome...)
+
